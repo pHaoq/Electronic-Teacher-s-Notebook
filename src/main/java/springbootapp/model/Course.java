@@ -3,10 +3,17 @@ package springbootapp.model;
 public class Course {
     private int id;
     private String name;
-    private String role;  // New field to store the user's role in the course
+    private String role;  // Field to store the user's role in the course
 
-    // Constructor
+    // Constructor with id and name parameters
     public Course(int id, String name) {
+        this.id = id;
+        this.name = name;
+        this.role = null;  // Role can be set later
+    }
+
+    // Constructor with id, name, and role parameters
+    public Course(int id, String name, String role) {
         this.id = id;
         this.name = name;
         this.role = role;  // Initialize the role

@@ -10,26 +10,7 @@ public class TokenManager {
     private static String token = null;
     private static final String TOKEN_FILE = "moodle_token.txt";
 
-    // Method to retrieve the current token or request a new one if not available
-    public static String getToken(String username, String password) throws IOException, InterruptedException {
-        // If token is already in memory, return it
-        if (token == null) {
-            // First, try to load the token from the file
-            token = loadTokenFromFile();
 
-            // If token is still null, request a new one
-            if (token == null) {
-                MoodleAPI moodleAPI = new MoodleAPI();
-                token = moodleAPI.authenticate(username, password);
-
-                // If a valid token is retrieved, save it to the file
-                if (token != null) {
-                    saveTokenToFile(token);
-                }
-            }
-        }
-        return token;
-    }
 
     // Method to invalidate the token (if needed)
     public static void invalidateToken() {

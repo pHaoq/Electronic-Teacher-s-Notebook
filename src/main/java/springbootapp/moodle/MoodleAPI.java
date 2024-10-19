@@ -8,6 +8,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -30,7 +34,7 @@ public class MoodleAPI {
      * @throws IOException          If an I/O error occurs
      * @throws InterruptedException If the operation is interrupted
      */
-    public String authenticate(String username, String password) throws IOException, InterruptedException {
+    public boolean authenticate(String username, String password) throws IOException, InterruptedException {
         String form = buildFormData(username, password, "moodle_mobile_app");
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -46,12 +50,32 @@ public class MoodleAPI {
 
         // If the status code is 200, try to parse the token
         if (response.statusCode() == 200) {
-            return parseTokenFromResponse(response.body());
-        } else {
-            parseAndLogError(response.body());
-            return null;
+            String token = parseTokenFromResponse(response.body());
+
+            // If token is valid, save it to a file and return true
+            if (token != null) {
+                saveTokenToFile(token);
+                return true;  // Authentication successful
+            }
+        }
+
+        // If we get here, either response code was not 200 or token was invalid
+        parseAndLogError(response.body());
+        return false;  // Authentication failed
+    }
+
+
+    private void saveTokenToFile(String token) {
+        Path tokenFilePath = Paths.get("moodle_token.txt");
+        try {
+            Files.write(tokenFilePath, token.getBytes(StandardCharsets.UTF_8));
+            System.out.println("Token saved successfully to moodle_token.txt");
+        } catch (IOException e) {
+            System.err.println("Error saving token to file: " + e.getMessage());
         }
     }
+
+
 
     // Helper methods remain unchanged...
 
