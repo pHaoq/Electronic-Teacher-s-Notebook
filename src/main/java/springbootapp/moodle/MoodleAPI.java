@@ -1,5 +1,6 @@
 package springbootapp.moodle;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -40,6 +41,10 @@ public class MoodleAPI {
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+        // Save the response to file for debugging or logging
+        saveResponseToFile(response.body(), "response.json");
+
+        // If the status code is 200, try to parse the token
         if (response.statusCode() == 200) {
             return parseTokenFromResponse(response.body());
         } else {
@@ -47,6 +52,8 @@ public class MoodleAPI {
             return null;
         }
     }
+
+    // Helper methods remain unchanged...
 
     private String buildFormData(String username, String password, String service) {
         return "username=" + urlEncode(username) +
@@ -67,5 +74,14 @@ public class MoodleAPI {
         JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
         String error = jsonObject.has("error") ? jsonObject.get("error").getAsString() : "Unknown error";
         System.out.println("Error: " + error);
+    }
+
+    private void saveResponseToFile(String jsonResponse, String filename) {
+        try (FileWriter file = new FileWriter(filename)) {
+            file.write(jsonResponse);
+            System.out.println("Response saved to " + filename);
+        } catch (IOException e) {
+            System.err.println("Failed to save response to file: " + e.getMessage());
+        }
     }
 }
