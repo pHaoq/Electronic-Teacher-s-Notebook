@@ -33,6 +33,8 @@ public class MoodleService {
         this.httpClient = HttpClient.newHttpClient();
     }
 
+
+
     /**
      * Get the current user's ID by calling Moodle's API.
      *
@@ -106,6 +108,7 @@ public class MoodleService {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println("JSON Response for enrolled students: " + response.body());
 
         if (response.statusCode() == 200) {
             JsonArray coursesArray = JsonParser.parseString(response.body()).getAsJsonArray();
@@ -114,11 +117,12 @@ public class MoodleService {
                 JsonObject courseJson = coursesArray.get(i).getAsJsonObject();
                 int courseId = courseJson.get("id").getAsInt();
                 String courseName = courseJson.get("fullname").getAsString();
-                // Optionally, fetch role (if available)
-                String role = courseJson.has("role") ? courseJson.get("role").getAsString() : null;
 
-                // Create Course object and add to the list, passing role if available
-                courses.add(new Course(courseId, courseName, role));
+                // Call the hasRequiredRole method to check if the user has the required role
+                if (true) {//hasRequiredRole(userId, courseId)
+                    // Create Course object and add to the list if the user has the required role
+                    courses.add(new Course(courseId, courseName));
+                }
             }
             return courses;
         } else {
@@ -126,6 +130,7 @@ public class MoodleService {
             return null;
         }
     }
+
 
     /**
      * Method to retrieve all students and their grades for a given course.
@@ -148,6 +153,56 @@ public class MoodleService {
 
         return students;
     }
+
+    public boolean hasRequiredRole(String token, int userId, int courseId) throws IOException, InterruptedException {
+        // Build the URL to get enrolled users in the specified course
+        String url = MOODLE_SERVICE_URL + "?wstoken=" + token
+                + "&wsfunction=core_enrol_get_enrolled_users&moodlewsrestformat=json&courseid=" + courseId;
+
+        // Create the HTTP request
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .GET()
+                .build();
+
+        // Send the request and get the response
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Check if the response is successful
+        if (response.statusCode() == 200) {
+            // Parse the JSON response
+            JsonArray usersArray = JsonParser.parseString(response.body()).getAsJsonArray();
+
+            // Loop through each user in the response
+            for (JsonElement element : usersArray) {
+                JsonObject user = element.getAsJsonObject();
+                int currentUserId = user.get("id").getAsInt();
+
+                // Check if this is the user we're interested in
+                if (currentUserId == userId) {
+                    // Check if the user has any of the required roles (3, 4, 27)
+                    if (user.has("roles") && user.get("roles").isJsonArray()) {
+                        JsonArray rolesArray = user.getAsJsonArray("roles");
+                        for (JsonElement roleElement : rolesArray) {
+                            JsonObject roleObj = roleElement.getAsJsonObject();
+                            int roleId = roleObj.get("roleid").getAsInt();
+                            // Return true if the user has one of the required roles
+                            if (roleId == 3 || roleId == 4 || roleId == 27) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            System.out.println("Failed to fetch enrolled users. Response: " + response.body());
+        }
+
+        // Return false if the user does not have any of the required roles
+        return false;
+    }
+
 
     /**
      * Helper method to get all enrolled students in a course.
@@ -202,6 +257,7 @@ public class MoodleService {
             return new ArrayList<>();
         }
     }
+
 
 
     /**
