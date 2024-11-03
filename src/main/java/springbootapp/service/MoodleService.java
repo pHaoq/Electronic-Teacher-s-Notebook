@@ -81,6 +81,8 @@ public class MoodleService {
      * @throws InterruptedException if the operation is interrupted
      */
 
+
+
     public List<Course> getUserCourses() throws IOException, InterruptedException {
         // Fetch the token using TokenManager's loadTokenFromFile method
         String token = TokenManager.loadTokenFromFile();
@@ -113,15 +115,21 @@ public class MoodleService {
         if (response.statusCode() == 200) {
             JsonArray coursesArray = JsonParser.parseString(response.body()).getAsJsonArray();
             List<Course> courses = new ArrayList<>();
+            final long filterStartDate = 1725141600L; // September 1, 2024 in Unix timestamp
+
             for (int i = 0; i < coursesArray.size(); i++) {
                 JsonObject courseJson = coursesArray.get(i).getAsJsonObject();
                 int courseId = courseJson.get("id").getAsInt();
                 String courseName = courseJson.get("fullname").getAsString();
+                long courseStartDate = courseJson.get("startdate").getAsLong();
 
-                // Call the hasRequiredRole method to check if the user has the required role
-                if (true) {//hasRequiredRole(userId, courseId)
-                    // Create Course object and add to the list if the user has the required role
-                    courses.add(new Course(courseId, courseName));
+                // Filter courses based on start date
+                if (courseStartDate >= filterStartDate) {
+                    // Check if the user has the required role (for demonstration, this is set to always true)
+                    if (true) { // hasRequiredRole(userId, courseId)
+                        // Create Course object and add to the list if the user has the required role
+                        courses.add(new Course(courseId, courseName));
+                    }
                 }
             }
             return courses;
@@ -130,6 +138,7 @@ public class MoodleService {
             return null;
         }
     }
+
 
 
     /**

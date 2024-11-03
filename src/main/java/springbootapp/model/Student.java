@@ -7,6 +7,7 @@ public class Student {
     private String fullName;
     private List<GradeItem> gradeItems;  // List to store grade items
     private List<Integer> roles;          // List to store roles
+    private List<Note> notes;
 
     // Constructor
     public Student(int id, String fullName, List<Integer> roles) {
@@ -23,7 +24,14 @@ public class Student {
     public void setId(int id) {
         this.id = id;
     }
+    // Getters and Setters for Notes
+    public List<Note> getNotes() {
+        return notes;
+    }
 
+    public void setNotes(List<Note> notes) {
+        this.notes = notes;
+    }
     public String getFullName() {
         return fullName;
     }
@@ -50,6 +58,6 @@ public class Student {
 
     @Override
     public String toString() {
-        return "Student{id=" + id + ", fullName='" + fullName + "', gradeItems=" + gradeItems + ", roles=" + roles + "}";
+        return "Student{id=" + id + ", fullName='" + fullName + "', gradeItems=" + gradeItems + ", roles=" + roles + ", notes=" + notes + "}";
     }
 }
