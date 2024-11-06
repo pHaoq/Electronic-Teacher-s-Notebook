@@ -10,6 +10,8 @@ import springbootapp.model.GradeItem;
 import springbootapp.model.Note;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -17,11 +19,14 @@ public class Main_test {
     public static void main(String[] args) {
         // Initialize MoodleService
         MoodleService moodleService = new MoodleService();
-        MoodleAPI moodleAPI = new MoodleAPI();  // Instantiate the MoodleAPI to use the authenticate method
+        MoodleAPI moodleAPI = new MoodleAPI();
         Scanner scanner = new Scanner(System.in);
 
+        // Connect to the database and create table
+        DatabaseManager.connect();
+        DatabaseManager.createNewTable();
+
         try {
-            // Prompt the user for credentials
             System.out.print("Enter your username: ");
             String username = scanner.nextLine();
 
@@ -40,6 +45,9 @@ public class Main_test {
                     System.out.println("Courses where the user is enrolled:");
                     for (Course course : userCourses) {
                         System.out.println("Course ID: " + course.getId() + ", Course Name: " + course.getName());
+                        // Test the hasRequiredRole function for each course
+                        boolean hasRole = moodleService.hasRequiredRole(course.getId());
+                        System.out.println("Has required role in Course ID " + course.getId() + ": " + hasRole);
                     }
 
                     // Ask user to select a course to view grades
@@ -110,6 +118,10 @@ public class Main_test {
         } catch (IOException | InterruptedException e) {
             System.out.println("An error occurred during the process.");
             e.printStackTrace();
+        } finally {
+            // Close the database connection when the program ends
+            DatabaseManager.closeConnection();
         }
     }
 }
+
