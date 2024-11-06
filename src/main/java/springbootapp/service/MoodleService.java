@@ -27,6 +27,7 @@ public class MoodleService {
 
     private static final String MOODLE_SERVICE_URL = "https://moodle.technikum-wien.at/webservice/rest/server.php";
     private final HttpClient httpClient;
+    private int userId = -1;  // Globale Variable für die User-ID
 
     // Constructor to initialize HttpClient
     public MoodleService() {
@@ -43,16 +44,13 @@ public class MoodleService {
      * @throws InterruptedException if the operation is interrupted
      */
     public int getCurrentUserId() throws IOException, InterruptedException {
-        // Fetch the token using TokenManager's loadTokenFromFile method
         String token = TokenManager.loadTokenFromFile();
 
-        // If token is null, return -1 (indicates error)
         if (token == null) {
             System.out.println("Error: Token not found in the file");
             return -1;
         }
 
-        // Build URL for the current user ID request
         String url = MOODLE_SERVICE_URL + "?wstoken=" + token
                 + "&wsfunction=core_webservice_get_site_info&moodlewsrestformat=json";
 
@@ -66,7 +64,8 @@ public class MoodleService {
 
         if (response.statusCode() == 200) {
             JsonObject jsonResponse = JsonParser.parseString(response.body()).getAsJsonObject();
-            return jsonResponse.has("userid") ? jsonResponse.get("userid").getAsInt() : -1;
+            this.userId = jsonResponse.has("userid") ? jsonResponse.get("userid").getAsInt() : -1;
+            return this.userId;
         } else {
             parseAndLogError(response.body());
             return -1;
@@ -163,40 +162,50 @@ public class MoodleService {
         return students;
     }
 
-    public boolean hasRequiredRole(String token, int userId, int courseId) throws IOException, InterruptedException {
-        // Build the URL to get enrolled users in the specified course
+    public boolean hasRequiredRole(int courseId) throws IOException, InterruptedException {
+        String token = TokenManager.loadTokenFromFile();
+
+        if (token == null) {
+            System.out.println("Error: Token not found in the file");
+            return false;
+        }
+
+        // Falls `userId` noch nicht gesetzt ist, wird `getCurrentUserId()` aufgerufen
+        if (this.userId == -1) {
+            this.userId = getCurrentUserId();
+        }
+
+        // Falls `userId` nach dem Aufruf von `getCurrentUserId()` immer noch -1 ist, schlagen wir fehl
+        if (this.userId == -1) {
+            System.out.println("Error: Unable to retrieve user ID.");
+            return false;
+        }
+
         String url = MOODLE_SERVICE_URL + "?wstoken=" + token
                 + "&wsfunction=core_enrol_get_enrolled_users&moodlewsrestformat=json&courseid=" + courseId;
 
-        // Create the HTTP request
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
                 .GET()
                 .build();
 
-        // Send the request and get the response
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        // Check if the response is successful
         if (response.statusCode() == 200) {
-            // Parse the JSON response
             JsonArray usersArray = JsonParser.parseString(response.body()).getAsJsonArray();
 
-            // Loop through each user in the response
             for (JsonElement element : usersArray) {
                 JsonObject user = element.getAsJsonObject();
                 int currentUserId = user.get("id").getAsInt();
 
-                // Check if this is the user we're interested in
-                if (currentUserId == userId) {
-                    // Check if the user has any of the required roles (3, 4, 27)
+                if (currentUserId == this.userId) {
                     if (user.has("roles") && user.get("roles").isJsonArray()) {
                         JsonArray rolesArray = user.getAsJsonArray("roles");
                         for (JsonElement roleElement : rolesArray) {
                             JsonObject roleObj = roleElement.getAsJsonObject();
                             int roleId = roleObj.get("roleid").getAsInt();
-                            // Return true if the user has one of the required roles
+
                             if (roleId == 3 || roleId == 4 || roleId == 27) {
                                 return true;
                             }
@@ -208,7 +217,6 @@ public class MoodleService {
             System.out.println("Failed to fetch enrolled users. Response: " + response.body());
         }
 
-        // Return false if the user does not have any of the required roles
         return false;
     }
 
@@ -341,7 +349,6 @@ public class MoodleService {
 
         return gradeItems;
     }
-
 
 
     // Helper method to log errors
