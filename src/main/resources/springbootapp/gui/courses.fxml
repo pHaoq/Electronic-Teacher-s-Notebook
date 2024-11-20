@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.CoursesController">
-    <top>
-        <Label text="Courses" style="-fx-font-size: 24px; -fx-font-weight: bold;" BorderPane.alignment="CENTER"/>
-    </top>
-    <center>
-        <VBox spacing="10" alignment="CENTER">
-            <children>
-                <ListView fx:id="coursesListView" prefHeight="400" prefWidth="300"/>
-            </children>
-        </VBox>
-    </center>
-    <padding>
-        <Insets top="20" bottom="20" left="20" right="20"/>
-    </padding>
-</BorderPane>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="springbootapp.gui.CoursesController"
+      spacing="10" alignment="CENTER">
+
+    <!-- Tabelle für Kursübersicht -->
+    <TableView fx:id="coursesTable" prefHeight="400" prefWidth="600" onMouseClicked="#handleCourseSelection">
+        <columns>
+            <!-- Spalte für Kurs-ID -->
+            <TableColumn fx:id="courseIdColumn" text="Course ID" prefWidth="200"/>
+            <!-- Spalte für Kurs-Name -->
+            <TableColumn fx:id="courseNameColumn" text="Name" prefWidth="400"/>
+        </columns>
+    </TableView>
+</VBox>

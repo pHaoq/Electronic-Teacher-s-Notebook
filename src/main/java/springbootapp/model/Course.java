@@ -1,30 +1,30 @@
 package springbootapp.model;
 
 public class Course {
-    private int id;
+    private String id;
     private String name;
-    private String role;  // Field to store the user's role in the course
+    private String role; // Feld, um die Rolle des Benutzers im Kurs zu speichern
 
-    // Constructor with id and name parameters
-    public Course(int id, String name) {
+    // Konstruktor mit ID und Namen
+    public Course(String id, String name) {
         this.id = id;
         this.name = name;
-        this.role = null;  // Role can be set later
+        this.role = null; // Rolle kann später gesetzt werden
     }
 
-    // Constructor with id, name, and role parameters
-    public Course(int id, String name, String role) {
+    // Konstruktor mit ID, Name und Rolle
+    public Course(String id, String name, String role) {
         this.id = id;
         this.name = name;
-        this.role = role;  // Initialize the role
+        this.role = role; // Rolle initialisieren
     }
 
-    // Getters and Setters
-    public int getId() {
+    // Getter und Setter
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) { // Akzeptiert String für Konsistenz
         this.id = id;
     }
 
@@ -44,7 +44,7 @@ public class Course {
         this.role = role;
     }
 
-    // Override toString() for easy printing
+    // Überschreibt toString() für eine einfache Ausgabe
     @Override
     public String toString() {
         return "Course{id=" + id + ", name='" + name + "', role='" + role + "'}";

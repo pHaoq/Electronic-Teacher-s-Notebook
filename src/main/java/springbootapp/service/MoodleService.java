@@ -1,7 +1,6 @@
 package springbootapp.service;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -9,9 +8,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -118,7 +115,7 @@ public class MoodleService {
 
             for (int i = 0; i < coursesArray.size(); i++) {
                 JsonObject courseJson = coursesArray.get(i).getAsJsonObject();
-                int courseId = courseJson.get("id").getAsInt();
+                String courseId = String.valueOf(courseJson.get("id").getAsInt());
                 String courseName = courseJson.get("fullname").getAsString();
                 long courseStartDate = courseJson.get("startdate").getAsLong();
 
@@ -162,7 +159,7 @@ public class MoodleService {
         return students;
     }
 
-    public boolean hasRequiredRole(int courseId) throws IOException, InterruptedException {
+    public boolean hasRequiredRole(String courseId) throws IOException, InterruptedException {
         String token = TokenManager.loadTokenFromFile();
 
         if (token == null) {
