@@ -52,7 +52,7 @@ public class MainView extends Application {
         Scene scene = new Scene(fxmlLoader.load());
         StudentGradesController controller = fxmlLoader.getController();
         controller.setMainView(this); // Verbindung mit der MainView herstellen
-        controller.initialize(courseId); // Initialisiert mit Kurs-ID
+        controller.setCourseId(courseId); // Kurs-ID setzen
         stage.setTitle("Student Grades");
         stage.setScene(scene);
         stage.show();

@@ -6,49 +6,44 @@ import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 import springbootapp.model.Course;
+import springbootapp.service.MoodleService;
 
 import java.io.IOException;
 import java.util.List;
 
 public class CoursesController {
 
-    @FXML private TableView<Course> coursesTable;
-    @FXML private TableColumn<Course, String> courseIdColumn;
-    @FXML private TableColumn<Course, String> courseNameColumn;
+    @FXML private TableView<Course> coursesTable; // Tabelle für Kurse
+    @FXML private TableColumn<Course, String> courseIdColumn; // Spalte für Kurs-ID
+    @FXML private TableColumn<Course, String> courseNameColumn; // Spalte für Kursnamen
+    @FXML private VBox mainContainer; // Optional: für den Logout-Button
 
     private MainView mainView;
+    private final MoodleService moodleService = new MoodleService(); // MoodleService initialisieren
 
-    // Standardkonstruktor (erforderlich für FXMLLoader)
-    public CoursesController() {
-    }
-
+    /**
+     * Setter für MainView, um die Verbindung herzustellen.
+     */
     public void setMainView(MainView mainView) {
         this.mainView = mainView;
     }
 
+    /**
+     * Initialisierung der Tabelle und Konfiguration.
+     */
     @FXML
-    private void initialize() {
-        // Spalten mit den Eigenschaften der Course-Klasse verknüpfen
-        courseIdColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+    public void initialize() {
+        // Konfiguration der TableView-Spalten
+        courseIdColumn.setCellValueFactory(cellData ->
+                new javafx.beans.property.SimpleStringProperty(String.valueOf(cellData.getValue().getId())));
         courseNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 
-        // Beispiel-Daten für die Tabelle
-        List<Course> courses = List.of(
-                new Course("27868", "Agile Requirements Engineering"),
-                new Course("27974", "Digital Marketing BB"),
-                new Course("28100", "IT Security Basics BWI 5 BB"),
-                new Course("28580", "Rapid Application Development"),
-                new Course("26933", "Software Engineering Project"),
-                new Course("28073", "Scientific Writing and Research Methods"),
-                new Course("28297", "Testkurs zu Projekt 'Electronic Teacher's Notebook'")
-        );
+        // Kurse laden und der Tabelle hinzufügen
+        loadCourses();
 
-        // Daten in die Tabelle laden
-        ObservableList<Course> courseList = FXCollections.observableArrayList(courses);
-        coursesTable.setItems(courseList);
-
-        // Doppelklick-Ereignis für die Auswahl einer Zeile
+        // Event-Handler für Doppelklick in der Tabelle
         coursesTable.setOnMouseClicked(event -> {
             if (event.getClickCount() == 2) { // Doppelklick
                 handleCourseSelection();
@@ -56,19 +51,57 @@ public class CoursesController {
         });
     }
 
+    /**
+     * Lädt die Kurse und fügt sie der Tabelle hinzu.
+     */
+    private void loadCourses() {
+        try {
+            List<Course> courses = moodleService.getUserCourses(); // Daten von Moodle abrufen
+            if (courses != null && !courses.isEmpty()) {
+                ObservableList<Course> courseList = FXCollections.observableArrayList(courses);
+                coursesTable.setItems(courseList);
+            } else {
+                System.out.println("Keine Kurse gefunden oder Fehler beim Abrufen der Kurse.");
+            }
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Fehler beim Abrufen der Kursdaten.");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Event-Handler für die Auswahl eines Kurses in der Tabelle.
+     */
     @FXML
     private void handleCourseSelection() {
-        // Holt das ausgewählte Kursobjekt
         Course selectedCourse = coursesTable.getSelectionModel().getSelectedItem();
         if (selectedCourse != null) {
             try {
-                // Öffnet ein neues Fenster, um die Studentengrades anzuzeigen
-                mainView.showStudentGradesView(Integer.parseInt(selectedCourse.getId()));
-            } catch (NumberFormatException e) {
-                System.err.println("Fehler beim Konvertieren der Kurs-ID: " + e.getMessage());
+                if (selectedCourse.getId() != 0) {
+                    mainView.showStudentGradesView(selectedCourse.getId());
+                } else {
+                    System.out.println("Kein gültiger Kurs ausgewählt.");
+                }
             } catch (IOException e) {
-                System.err.println("Fehler beim Laden der Ansicht: " + e.getMessage());
+                System.out.println("Fehler beim Laden der StudentGrades-Ansicht.");
+                e.printStackTrace();
             }
+        } else {
+            System.out.println("Kein Kurs ausgewählt.");
+        }
+    }
+
+
+    /**
+     * Event-Handler für den Logout-Button.
+     */
+    @FXML
+    private void handleLogoutButton() {
+        try {
+            mainView.showLoginView(); // Zurück zur Login-Ansicht
+        } catch (IOException e) {
+            System.out.println("Fehler beim Laden der Login-Ansicht.");
+            e.printStackTrace();
         }
     }
 }
