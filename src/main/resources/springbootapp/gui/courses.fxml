@@ -3,14 +3,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.StudentGradesController">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.CoursesController">
     <top>
-        <Label text="Student Grades" style="-fx-font-size: 24px; -fx-font-weight: bold;" BorderPane.alignment="CENTER"/>
+        <Label text="Courses" style="-fx-font-size: 24px; -fx-font-weight: bold;" BorderPane.alignment="CENTER"/>
     </top>
     <center>
         <VBox spacing="10" alignment="CENTER">
             <children>
-                <ListView fx:id="studentsListView" prefHeight="400" prefWidth="300"/>
+                <ListView fx:id="coursesListView" prefHeight="400" prefWidth="300"/>
             </children>
         </VBox>
     </center>

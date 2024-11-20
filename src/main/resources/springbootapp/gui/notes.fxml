@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.NotesController">
+    <top>
+        <Label text="Student Notes" style="-fx-font-size: 24px; -fx-font-weight: bold;" BorderPane.alignment="CENTER"/>
+    </top>
+    <center>
+        <VBox spacing="10" alignment="CENTER">
+            <children>
+                <TextArea fx:id="notesDisplayArea" editable="false" prefHeight="300" wrapText="true" promptText="Notes will display here..."/>
+
+                <HBox spacing="10" alignment="CENTER">
+                    <children>
+                        <TextField fx:id="noteTextField" promptText="Enter note text" prefWidth="200"/>
+                        <TextField fx:id="noteColorField" promptText="Note color" prefWidth="100"/>
+                        <Button fx:id="addNoteButton" text="Add Note" onAction="#handleAddNote"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+    <padding>
+        <Insets top="20" bottom="20" left="20" right="20"/>
+    </padding>
+</BorderPane>
