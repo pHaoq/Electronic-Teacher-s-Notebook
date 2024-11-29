@@ -5,12 +5,15 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="springbootapp.gui.CoursesController" spacing="10">
-    <TableView fx:id="coursesTable" prefHeight="400" prefWidth="600">
+      fx:controller="springbootapp.gui.CoursesController"
+      spacing="10" style="-fx-background-color: white; -fx-padding: 20;">
+    <TableView fx:id="coursesTable" prefHeight="400" prefWidth="600"
+               style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;">
         <columns>
             <TableColumn fx:id="courseIdColumn" text="Course ID"/>
             <TableColumn fx:id="courseNameColumn" text="Name"/>
         </columns>
     </TableView>
-    <Button text="Logout" onAction="#handleLogoutButton"/> <!-- Logout-Button -->
+    <Button text="Logout" onAction="#handleLogoutButton"
+            style="-fx-background-color: #00509E; -fx-text-fill: white; -fx-font-weight: bold;"/>
 </VBox>

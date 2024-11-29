@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="springbootapp.gui.StudentGradesController"
-      spacing="10" alignment="CENTER">
+      spacing="20" alignment="CENTER" style="-fx-padding: 20; -fx-background-color: white;">
+
+    <!-- Suchfeld -->
+    <TextField fx:id="searchField" promptText="Search student..."
+               onKeyReleased="#handleSearch"
+               style="-fx-background-color: #E8F5E9; -fx-border-color: #80CC28;"/>
 
     <!-- Back Button -->
-    <Button fx:id="backButton" text="Back" onAction="#handleBackButton" />
+    <Button fx:id="backButton" text="Back" onAction="#handleBackButton"
+            style="-fx-background-color: #00509E; -fx-text-fill: white; -fx-font-weight: bold;"/>
 
-    <!-- Tabelle für Studentengrades -->
-    <TableView fx:id="studentsTable" prefHeight="400" prefWidth="600">
-        <columns>
-            <TableColumn fx:id="studentIdColumn" text="Student ID" prefWidth="100"/>
-            <TableColumn fx:id="fullNameColumn" text="Full Name" prefWidth="300"/>
-            <TableColumn fx:id="gradesColumn" text="Grades" prefWidth="300"/>
-        </columns>
-    </TableView>
-
+    <!-- Accordion für Studenten -->
+    <Accordion fx:id="studentsAccordion" prefWidth="600"
+               style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;"/>
 </VBox>

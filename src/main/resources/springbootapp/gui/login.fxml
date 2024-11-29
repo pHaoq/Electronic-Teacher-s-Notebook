@@ -3,17 +3,21 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.LoginController">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.LoginController"
+            style="-fx-background-color: white;">
   <center>
-    <VBox alignment="CENTER" spacing="10">
+    <VBox alignment="CENTER" spacing="20" style="-fx-padding: 50;">
       <children>
-        <Label text="Login" style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
+        <Label text="Login" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00509E;"/>
 
-        <TextField fx:id="usernameField" promptText="Username" maxWidth="200"/>
+        <TextField fx:id="usernameField" promptText="Username" maxWidth="300"
+                   style="-fx-background-color: #E8F5E9;"/>
 
-        <PasswordField fx:id="passwordField" promptText="Password" maxWidth="200"/>
+        <PasswordField fx:id="passwordField" promptText="Password" maxWidth="300"
+                       style="-fx-background-color: #E8F5E9;"/>
 
-        <Button fx:id="loginButton" text="Login" onAction="#handleLogin" maxWidth="100"/>
+        <Button fx:id="loginButton" text="Login" onAction="#handleLogin" maxWidth="200"
+                style="-fx-background-color: #80CC28; -fx-text-fill: white; -fx-font-weight: bold;"/>
 
         <Label fx:id="loginStatusLabel" textFill="red"/>
       </children>

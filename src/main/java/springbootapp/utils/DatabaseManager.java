@@ -2,12 +2,7 @@ package springbootapp.utils;
 
 import springbootapp.model.Note;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +10,7 @@ public class DatabaseManager {
     private static final String DATABASE_URL = "jdbc:sqlite:src/main/resources/database/notes.db";
     private static Connection conn = null;
 
-    // Initialize and store a single connection instance
+    // Establish a database connection if not already connected
     public static void connect() {
         try {
             if (conn == null || conn.isClosed()) {
@@ -27,7 +22,7 @@ public class DatabaseManager {
         }
     }
 
-    // Method to close the connection when done
+    // Close the connection when no longer needed
     public static void closeConnection() {
         try {
             if (conn != null && !conn.isClosed()) {
@@ -39,7 +34,10 @@ public class DatabaseManager {
         }
     }
 
+    // Create the notes table if it doesn't exist
     public static void createNewTable() {
+        connect(); // Ensure connection is active before creating the table
+
         String sql = """
                      CREATE TABLE IF NOT EXISTS notes (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +57,10 @@ public class DatabaseManager {
         }
     }
 
+    // Insert a new note into the notes table
     public static void insertNote(int studentId, int courseId, String noteText, String noteColour) {
+        connect(); // Ensure connection is active before inserting
+
         String sql = "INSERT INTO notes(student_id, course_id, note_text, note_colour) VALUES(?, ?, ?, ?)";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -74,7 +75,10 @@ public class DatabaseManager {
         }
     }
 
+    // Select notes by student ID and course ID
     public static List<Note> selectNotesByStudentAndCourse(int studentId, int courseId) {
+        connect(); // Ensure connection is active before querying
+
         String sql = "SELECT id, student_id, course_id, note_text, note_colour, date FROM notes WHERE student_id = ? AND course_id = ?";
         List<Note> notes = new ArrayList<>();
 
@@ -96,4 +100,17 @@ public class DatabaseManager {
 
         return notes;
     }
+
+    public static void deleteNoteById(int noteId) {
+        connect();
+        String sql = "DELETE FROM notes WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, noteId);
+            pstmt.executeUpdate();
+            System.out.println("Note with ID " + noteId + " has been deleted.");
+        } catch (SQLException e) {
+            System.out.println("Error deleting note: " + e.getMessage());
+        }
+    }
+
 }
