@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Priority;
 import springbootapp.model.GradeItem;
 import springbootapp.model.Student;
 import springbootapp.service.MoodleService;
@@ -70,10 +71,19 @@ public class StudentGradesController {
                 gradesTable.setPlaceholder(new Label("No grades available"));
             }
 
+            gradesTable.setPrefHeight(200); // Setze eine Standardhöhe für die Tabelle
+            gradesTable.setMaxHeight(Double.MAX_VALUE); // Ermögliche dynamisches Wachstum
+
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setContent(gradesTable);
+            scrollPane.setFitToWidth(true);
+
             Button addCommentButton = new Button("Add Comment");
             addCommentButton.setOnAction(event -> handleAddComment(student));
 
-            container.getChildren().addAll(gradesTable, addCommentButton);
+            container.getChildren().addAll(scrollPane, addCommentButton);
+            VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
             studentPane.setContent(container);
             studentsAccordion.getPanes().add(studentPane);
         }

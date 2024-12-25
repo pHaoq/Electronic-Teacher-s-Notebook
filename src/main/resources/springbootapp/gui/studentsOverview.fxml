@@ -2,23 +2,19 @@
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="springbootapp.gui.StudentGradesController"
-      spacing="20" alignment="CENTER" style="-fx-padding: 20; -fx-background-color: white;">
-
-    <!-- Suchfeld -->
+      spacing="20" alignment="CENTER" style="-fx-padding: 20; -fx-background-color: white; -fx-pref-width: 800; -fx-pref-height: 600;">
     <TextField fx:id="searchField" promptText="Search student..."
                onKeyReleased="#handleSearch"
-               style="-fx-background-color: #E8F5E9; -fx-border-color: #80CC28;"/>
-
-    <!-- Back Button -->
+               style="-fx-background-color: #E8F5E9; -fx-border-color: #80CC28; -fx-pref-width: 760;"/>
     <Button fx:id="backButton" text="Back" onAction="#handleBackButton"
             style="-fx-background-color: #00509E; -fx-text-fill: white; -fx-font-weight: bold;"/>
-
-    <!-- Accordion für Studenten -->
-    <Accordion fx:id="studentsAccordion" prefWidth="600"
-               style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;"/>
+    <ScrollPane fitToWidth="true" style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;">
+        <Accordion fx:id="studentsAccordion" prefWidth="760"/>
+    </ScrollPane>
 </VBox>

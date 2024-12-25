@@ -10,16 +10,20 @@ import springbootapp.model.Note;
 import springbootapp.utils.DatabaseManager;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 public class NotesController {
     @FXML private TextField noteTextField;
-    @FXML private ComboBox<String> noteColorComboBox; // Dropdown for color selection
+    @FXML private ComboBox<String> noteColorComboBox;
     @FXML private Button addNoteButton;
-    @FXML private TableView<Note> notesTable; // Table for displaying notes
+    @FXML private TableView<Note> notesTable;
     @FXML private TableColumn<Note, String> textColumn;
     @FXML private TableColumn<Note, String> colorColumn;
-    @FXML private TableColumn<Note, Void> actionColumn; // Column for delete button
+    @FXML private TableColumn<Note, String> dateColumn;
+    @FXML private TableColumn<Note, Void> actionColumn;
 
     private MainView mainView;
     private int studentId;
@@ -41,12 +45,8 @@ public class NotesController {
     }
 
     private void setupColorComboBox() {
-        // Add descriptive names for colors
-        noteColorComboBox.getItems().addAll(
-                "Organizatory (Blue)",
-                "Negative Behavior (Red)",
-                "Positive Behavior (Green)"
-        );
+        // Add types without parentheses
+        noteColorComboBox.getItems().addAll("Organizatory", "Negative Behavior", "Positive Behavior");
 
         noteColorComboBox.setCellFactory(listView -> new ListCell<>() {
             @Override
@@ -56,31 +56,79 @@ public class NotesController {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    String color = extractColorFromSelection(item);
-                    HBox colorBox = new HBox();
-                    colorBox.setStyle("-fx-background-color: " + color + "; -fx-min-width: 20px; -fx-min-height: 20px; -fx-border-color: black;");
-                    setGraphic(colorBox);
+                    // Use same colors as in the table rows
+                    String color = mapTypeToColor(item);
+                    setStyle("-fx-background-color: " + getColorStyle(color) + "; -fx-text-fill: black;");
                     setText(item);
                 }
             }
         });
+
+        noteColorComboBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (item == null || empty) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    String color = mapTypeToColor(item);
+                    setStyle("-fx-background-color: " + getColorStyle(color) + "; -fx-text-fill: black;");
+                    setText(item);
+                }
+            }
+        });
+
         noteColorComboBox.setPromptText("Select note type");
     }
 
     private void setupTable() {
-        // Bind table columns to Note properties
         textColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
-        colorColumn.setCellValueFactory(new PropertyValueFactory<>("colour"));
 
-        // Add delete button column
+        // Custom cell value factory for displaying types instead of colors
+        colorColumn.setCellValueFactory(cellData -> {
+            String color = cellData.getValue().getColour();
+            return new javafx.beans.property.SimpleStringProperty(mapColorToType(color));
+        });
+
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
+
         actionColumn.setCellFactory(col -> new TableCell<>() {
             private final Button deleteButton = new Button("X");
+            private final Button editButton = new Button("Edit");
+            private final Button upButton = new Button("↑");
+            private final Button downButton = new Button("↓");
+            private final HBox actionButtons = new HBox(5, deleteButton, editButton, upButton, downButton);
 
             {
                 deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white; -fx-font-weight: bold;");
                 deleteButton.setOnAction(event -> {
                     Note note = getTableView().getItems().get(getIndex());
                     handleDeleteNote(note);
+                });
+
+                editButton.setStyle("-fx-background-color: orange; -fx-text-fill: white; -fx-font-weight: bold;");
+                editButton.setOnAction(event -> {
+                    Note note = getTableView().getItems().get(getIndex());
+                    handleEditNote(note);
+                });
+
+                upButton.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-font-weight: bold;");
+                upButton.setOnAction(event -> {
+                    int currentIndex = getIndex();
+                    if (currentIndex > 0) {
+                        Collections.swap(notesData, currentIndex, currentIndex - 1);
+                        notesTable.refresh();
+                    }
+                });
+
+                downButton.setStyle("-fx-background-color: #808080; -fx-text-fill: white; -fx-font-weight: bold;");
+                downButton.setOnAction(event -> {
+                    int currentIndex = getIndex();
+                    if (currentIndex < notesData.size() - 1) {
+                        Collections.swap(notesData, currentIndex, currentIndex + 1);
+                        notesTable.refresh();
+                    }
                 });
             }
 
@@ -90,12 +138,11 @@ public class NotesController {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    setGraphic(deleteButton);
+                    setGraphic(actionButtons);
                 }
             }
         });
 
-        // Add row styling based on color
         notesTable.setRowFactory(tv -> new TableRow<>() {
             @Override
             protected void updateItem(Note note, boolean empty) {
@@ -120,14 +167,14 @@ public class NotesController {
     @FXML
     public void handleAddNote() {
         String noteText = noteTextField.getText().trim();
-        String selectedColor = noteColorComboBox.getValue();
+        String selectedType = noteColorComboBox.getValue();
 
-        if (!noteText.isEmpty() && selectedColor != null) {
-            String color = extractColorFromSelection(selectedColor);
+        if (!noteText.isEmpty() && selectedType != null) {
+            String color = mapTypeToColor(selectedType);
+            String currentDate = getCurrentDateTime();
             DatabaseManager.insertNote(studentId, courseId, noteText, color);
 
-            // Add the new note to the table and clear the fields
-            Note newNote = new Note(0, studentId, courseId, noteText, color); // ID is not needed for UI
+            Note newNote = new Note(0, studentId, courseId, noteText, color, currentDate);
             notesData.add(newNote);
 
             noteTextField.clear();
@@ -144,32 +191,73 @@ public class NotesController {
         notesData.remove(note);
     }
 
-    private String extractColorFromSelection(String selection) {
-        if (selection.startsWith("Organizatory")) {
-            return "blue";
-        } else if (selection.startsWith("Negative Behavior")) {
-            return "red";
-        } else if (selection.startsWith("Positive Behavior")) {
-            return "green";
-        }
-        return "none";
+    private void handleEditNote(Note note) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Note");
+        dialog.setHeaderText("Edit the selected note");
+
+        TextArea textArea = new TextArea(note.getText());
+        textArea.setWrapText(true);
+        dialog.getDialogPane().setContent(textArea);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        // Handle dialog result
+        dialog.showAndWait().ifPresent(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                String newText = textArea.getText().trim();
+                if (!newText.isEmpty()) {
+                    note.setText(newText);
+                    String newDate = getCurrentDateTime();
+                    note.setDate(newDate);
+                    DatabaseManager.updateNoteText(note.getId(), newText, newDate);
+                    notesTable.refresh();
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setContentText("Note text cannot be empty.");
+                    alert.show();
+                }
+            }
+        });
+    }
+
+    private String mapTypeToColor(String type) {
+        return switch (type.toLowerCase()) {
+            case "organizatory" -> "blue";
+            case "negative behavior" -> "red";
+            case "positive behavior" -> "green";
+            default -> "transparent";
+        };
+    }
+
+    private String mapColorToType(String color) {
+        return switch (color.toLowerCase()) {
+            case "blue" -> "Organizatory";
+            case "red" -> "Negative Behavior";
+            case "green" -> "Positive Behavior";
+            default -> "Unknown";
+        };
     }
 
     private String getColorStyle(String color) {
         return switch (color.toLowerCase()) {
-            case "blue" -> "rgba(173, 216, 230, 0.5)"; // Light Blue
-            case "red" -> "rgba(255, 182, 193, 0.5)"; // Light Red
-            case "green" -> "rgba(144, 238, 144, 0.5)"; // Light Green
+            case "blue" -> "rgba(173, 216, 230, 0.5)";
+            case "red" -> "rgba(255, 182, 193, 0.5)";
+            case "green" -> "rgba(144, 238, 144, 0.5)";
             default -> "transparent";
         };
+    }
+
+    private String getCurrentDateTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return LocalDateTime.now().format(formatter);
     }
 
     @FXML
     private void handleBackButton() {
         try {
-            mainView.showCoursesView();
+            mainView.showStudentGradesView(courseId);
         } catch (IOException e) {
-            System.out.println("Fehler beim Laden der Kursübersicht.");
+            System.out.println("Error loading courses view.");
             e.printStackTrace();
         }
     }

@@ -6,12 +6,12 @@
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       fx:controller="springbootapp.gui.CoursesController"
-      spacing="10" style="-fx-background-color: white; -fx-padding: 20;">
-    <TableView fx:id="coursesTable" prefHeight="400" prefWidth="600"
+      spacing="10" style="-fx-background-color: white; -fx-padding: 20; -fx-pref-width: 800; -fx-pref-height: 600;">
+    <TableView fx:id="coursesTable" prefHeight="500" prefWidth="780"
                style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;">
         <columns>
-            <TableColumn fx:id="courseIdColumn" text="Course ID"/>
-            <TableColumn fx:id="courseNameColumn" text="Name"/>
+            <TableColumn fx:id="courseIdColumn" text="Course ID" prefWidth="200"/>
+            <TableColumn fx:id="courseNameColumn" text="Name" prefWidth="580"/>
         </columns>
     </TableView>
     <Button text="Logout" onAction="#handleLogoutButton"
