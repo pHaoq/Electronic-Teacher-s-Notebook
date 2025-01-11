@@ -238,9 +238,15 @@ public class MoodleService {
                         for (JsonElement gradeElement : gradesArray) {
                             JsonObject gradeObj = gradeElement.getAsJsonObject();
                             int itemId = gradeObj.has("id") && !gradeObj.get("id").isJsonNull() ? gradeObj.get("id").getAsInt() : -1;
+
+                            // Replace "Unnamed" with "Total"
                             String itemName = gradeObj.has("itemname") && !gradeObj.get("itemname").isJsonNull()
                                     ? gradeObj.get("itemname").getAsString()
                                     : "Unnamed";
+                            if ("Unnamed".equals(itemName)) {
+                                itemName = "Total";
+                            }
+
                             String grade = gradeObj.has("graderaw") && !gradeObj.get("graderaw").isJsonNull()
                                     ? gradeObj.get("graderaw").getAsString()
                                     : "No Grade";
@@ -253,5 +259,6 @@ public class MoodleService {
         }
         return gradeItems;
     }
+
 
 }
