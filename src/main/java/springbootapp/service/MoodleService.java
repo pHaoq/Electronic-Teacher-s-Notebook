@@ -1,7 +1,6 @@
 package springbootapp.service;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -9,39 +8,30 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import springbootapp.model.Course;
 import springbootapp.model.GradeItem;
 import springbootapp.model.Student;
 import springbootapp.moodle.TokenManager;
-import springbootapp.model.Course; // Import the Course model
 
 public class MoodleService {
 
     private static final String MOODLE_SERVICE_URL = "https://moodle.technikum-wien.at/webservice/rest/server.php";
     private final HttpClient httpClient;
-    private int userId = -1;  // Globale Variable für die User-ID
+    private int userId = -1;
 
-    // Constructor to initialize HttpClient
     public MoodleService() {
         this.httpClient = HttpClient.newHttpClient();
     }
 
-
-
     /**
-     * Get the current user's ID by calling Moodle's API.
-     *
-     * @return the user ID, or -1 if there's an error
-     * @throws IOException          if an I/O error occurs
-     * @throws InterruptedException if the operation is interrupted
+     * Fetches the current user's ID by calling the Moodle API.
      */
     public int getCurrentUserId() throws IOException, InterruptedException {
         String token = TokenManager.loadTokenFromFile();
@@ -65,40 +55,28 @@ public class MoodleService {
         if (response.statusCode() == 200) {
             JsonObject jsonResponse = JsonParser.parseString(response.body()).getAsJsonObject();
             this.userId = jsonResponse.has("userid") ? jsonResponse.get("userid").getAsInt() : -1;
+            System.out.println("User ID fetched successfully: " + this.userId);
             return this.userId;
         } else {
-            parseAndLogError(response.body());
+            System.out.println("Error fetching user ID: " + response.body());
             return -1;
         }
     }
 
     /**
-     * Get a list of the user's enrolled courses where they are a tutor (teacher) by calling Moodle's API.
-     *
-     * @return list of courses where the user is a tutor, or null if there's an error
-     * @throws IOException          if an I/O error occurs
-     * @throws InterruptedException if the operation is interrupted
+     * Retrieves the courses the user is enrolled in.
      */
-
-
-
     public List<Course> getUserCourses() throws IOException, InterruptedException {
-        // Fetch the token using TokenManager's loadTokenFromFile method
         String token = TokenManager.loadTokenFromFile();
-
-        // If token is null, return null (indicates error)
         if (token == null) {
             System.out.println("Error: Token not found in the file");
-            return null;
+            return new ArrayList<>(); // Leere Liste zurückgeben, um Fehler zu vermeiden
         }
 
-        // Fetch the current user's ID first
-        int userId = getCurrentUserId();
-        if (userId == -1) {
-            return null;
+        if (this.userId == -1) {
+            this.userId = getCurrentUserId();
         }
 
-        // Build URL for the user courses request
         String url = MOODLE_SERVICE_URL + "?wstoken=" + token
                 + "&wsfunction=core_enrol_get_users_courses&moodlewsrestformat=json&userid=" + userId;
 
@@ -109,76 +87,44 @@ public class MoodleService {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-        System.out.println("JSON Response for enrolled students: " + response.body());
+        System.out.println("Moodle API Response for Courses: " + response.body()); // Debugging-Ausgabe
 
-        if (response.statusCode() == 200) {
+        List<Course> courses = new ArrayList<>();
+        try {
+            // Versuchen, die Antwort als JSON-Array zu parsen
             JsonArray coursesArray = JsonParser.parseString(response.body()).getAsJsonArray();
-            List<Course> courses = new ArrayList<>();
-            final long filterStartDate = 1725141600L; // September 1, 2024 in Unix timestamp
 
-            for (int i = 0; i < coursesArray.size(); i++) {
-                JsonObject courseJson = coursesArray.get(i).getAsJsonObject();
-                int courseId = courseJson.get("id").getAsInt();
-                String courseName = courseJson.get("fullname").getAsString();
-                long courseStartDate = courseJson.get("startdate").getAsLong();
-
-                // Filter courses based on start date
-                if (courseStartDate >= filterStartDate) {
-                    // Check if the user has the required role (for demonstration, this is set to always true)
-                    if (true) { // hasRequiredRole(userId, courseId)
-                        // Create Course object and add to the list if the user has the required role
-                        courses.add(new Course(courseId, courseName));
-                    }
-                }
+            for (JsonElement element : coursesArray) {
+                JsonObject courseJson = element.getAsJsonObject();
+                int id = courseJson.get("id").getAsInt();
+                String name = courseJson.get("fullname").getAsString();
+                courses.add(new Course(id, name));
             }
-            return courses;
-        } else {
-            parseAndLogError(response.body());
-            return null;
+        } catch (IllegalStateException e) {
+            // Ausnahme behandeln, wenn die Antwort kein JSON-Array ist
+            System.out.println("Fehler beim Abrufen der Kurse: " + response.body());
+            JsonObject errorResponse = JsonParser.parseString(response.body()).getAsJsonObject();
+            if (errorResponse.has("exception")) {
+                System.out.println("API-Fehler: " + errorResponse.get("message").getAsString());
+            }
         }
-    }
 
+        return courses;
+    }
 
 
     /**
-     * Method to retrieve all students and their grades for a given course.
-     *
-     * @param courseId The course ID.
-     * @return A list of Student objects with their grades.
-     * @throws IOException, InterruptedException
+     * Checks if the user has the required role in a specific course.
      */
-    public List<Student> getAllStudentsWithGrades(int courseId) throws IOException, InterruptedException {
-        String token = TokenManager.loadTokenFromFile();
-
-        // Step 1: Get all enrolled user IDs
-        List<Student> students = getEnrolledStudents(token, courseId);
-
-        // Step 2: For each student, retrieve their grades
-        for (Student student : students) {
-            List<GradeItem> grades = getStudentGrades(token, courseId, student.getId());
-            student.setGradeItems(grades);  // Set grades for the student
-        }
-
-        return students;
-    }
-
     public boolean hasRequiredRole(int courseId) throws IOException, InterruptedException {
         String token = TokenManager.loadTokenFromFile();
-
         if (token == null) {
             System.out.println("Error: Token not found in the file");
             return false;
         }
 
-        // Falls `userId` noch nicht gesetzt ist, wird `getCurrentUserId()` aufgerufen
         if (this.userId == -1) {
             this.userId = getCurrentUserId();
-        }
-
-        // Falls `userId` nach dem Aufruf von `getCurrentUserId()` immer noch -1 ist, schlagen wir fehl
-        if (this.userId == -1) {
-            System.out.println("Error: Unable to retrieve user ID.");
-            return false;
         }
 
         String url = MOODLE_SERVICE_URL + "?wstoken=" + token
@@ -197,38 +143,40 @@ public class MoodleService {
 
             for (JsonElement element : usersArray) {
                 JsonObject user = element.getAsJsonObject();
-                int currentUserId = user.get("id").getAsInt();
-
-                if (currentUserId == this.userId) {
-                    if (user.has("roles") && user.get("roles").isJsonArray()) {
-                        JsonArray rolesArray = user.getAsJsonArray("roles");
-                        for (JsonElement roleElement : rolesArray) {
-                            JsonObject roleObj = roleElement.getAsJsonObject();
-                            int roleId = roleObj.get("roleid").getAsInt();
-
-                            if (roleId == 3 || roleId == 4 || roleId == 27) {
-                                return true;
-                            }
+                if (user.get("id").getAsInt() == this.userId) {
+                    JsonArray rolesArray = user.getAsJsonArray("roles");
+                    for (JsonElement roleElement : rolesArray) {
+                        int roleId = roleElement.getAsJsonObject().get("roleid").getAsInt();
+                        if (roleId == 3 || roleId == 4 || roleId == 27) { // Teacher roles
+                            return true;
                         }
                     }
                 }
             }
-        } else {
-            System.out.println("Failed to fetch enrolled users. Response: " + response.body());
         }
-
         return false;
     }
 
-
     /**
-     * Helper method to get all enrolled students in a course.
-     *
-     * @param token    Moodle web service token
-     * @param courseId The course ID
-     * @return A list of Student objects
-     * @throws IOException, InterruptedException
+     * Retrieves all students and their grades for a specific course.
      */
+    public List<Student> getAllStudentsWithGrades(int courseId) throws IOException, InterruptedException {
+        String token = TokenManager.loadTokenFromFile();
+        if (token == null) {
+            System.out.println("Error: Token not found in the file");
+            return new ArrayList<>();
+        }
+
+        List<Student> students = getEnrolledStudents(token, courseId);
+
+        for (Student student : students) {
+            List<GradeItem> grades = getStudentGrades(token, courseId, student.getId());
+            student.setGradeItems(grades);
+        }
+
+        return students;
+    }
+
     private List<Student> getEnrolledStudents(String token, int courseId) throws IOException, InterruptedException {
         String url = MOODLE_SERVICE_URL + "?wstoken=" + token
                 + "&wsfunction=core_enrol_get_enrolled_users&moodlewsrestformat=json&courseid=" + courseId;
@@ -240,57 +188,29 @@ public class MoodleService {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
-        // Print the full JSON response
-        System.out.println("JSON Response for enrolled students: " + response.body());
+        List<Student> students = new ArrayList<>();
 
         if (response.statusCode() == 200) {
             JsonArray usersArray = JsonParser.parseString(response.body()).getAsJsonArray();
-            List<Student> students = new ArrayList<>();
 
             for (JsonElement element : usersArray) {
                 JsonObject user = element.getAsJsonObject();
-                int userId = user.get("id").getAsInt();
-                String fullName = user.get("fullname").getAsString();
+                int userId = user.has("id") && !user.get("id").isJsonNull() ? user.get("id").getAsInt() : -1;
+                String fullName = user.has("fullname") && !user.get("fullname").isJsonNull()
+                        ? user.get("fullname").getAsString()
+                        : "Unknown";
 
-                // Extract roles as an array
-                List<Integer> roles = new ArrayList<>();
-                if (user.has("roles") && user.get("roles").isJsonArray()) {
-                    JsonArray rolesArray = user.getAsJsonArray("roles");
-                    for (JsonElement roleElement : rolesArray) {
-                        JsonObject roleObj = roleElement.getAsJsonObject();
-                        Integer roleID = roleObj.get("roleid").getAsInt();
-                        roles.add(roleID);  // Add the role name to the list
-                    }
-                }
-
-                // Create a new Student object with the roles
-                Student student = new Student(userId, fullName, roles);
-                students.add(student);
+                students.add(new Student(userId, fullName, new ArrayList<>()));
             }
-            return students;
-        } else {
-            System.out.println("Failed to fetch enrolled students.");
-            return new ArrayList<>();
         }
+        return students;
     }
 
 
-
-    /**
-     * Helper method to get grades for a single student in a course.
-     *
-     * @param token    Moodle web service token
-     * @param courseId The course ID
-     * @param userId   The user ID
-     * @return A list of GradeItem objects for the student
-     * @throws IOException, InterruptedException
-     */
     private List<GradeItem> getStudentGrades(String token, int courseId, int userId) throws IOException, InterruptedException {
         String url = MOODLE_SERVICE_URL + "?wstoken=" + token
                 + "&wsfunction=gradereport_user_get_grade_items&moodlewsrestformat=json";
 
-        // Build the POST data
         String formData = "courseid=" + URLEncoder.encode(String.valueOf(courseId), StandardCharsets.UTF_8)
                 + "&userid=" + URLEncoder.encode(String.valueOf(userId), StandardCharsets.UTF_8);
 
@@ -301,60 +221,44 @@ public class MoodleService {
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-
         List<GradeItem> gradeItems = new ArrayList<>();
 
         if (response.statusCode() == 200) {
             JsonObject responseObject = JsonParser.parseString(response.body()).getAsJsonObject();
 
-            // First, check if "usergrades" array exists
-            if (responseObject.has("usergrades") && !responseObject.get("usergrades").isJsonNull()) {
+            if (responseObject.has("usergrades")) {
                 JsonArray userGradesArray = responseObject.getAsJsonArray("usergrades");
 
-                // Loop through the "usergrades" array
                 for (JsonElement userGradeElement : userGradesArray) {
                     JsonObject userGradeObject = userGradeElement.getAsJsonObject();
 
-                    // Check if "gradeitems" array exists for each user grade
-                    if (userGradeObject.has("gradeitems") && !userGradeObject.get("gradeitems").isJsonNull()) {
+                    if (userGradeObject.has("gradeitems")) {
                         JsonArray gradesArray = userGradeObject.getAsJsonArray("gradeitems");
 
-                        // Now loop through the "gradeitems" array
-                        if (gradesArray != null && gradesArray.size() > 0) {
-                            for (JsonElement gradeElement : gradesArray) {
-                                JsonObject gradeObj = gradeElement.getAsJsonObject();
-                                int itemId = gradeObj.get("id").getAsInt();
-                                String itemName = gradeObj.has("itemname") && !gradeObj.get("itemname").isJsonNull()
-                                        ? gradeObj.get("itemname").getAsString() : "Unnamed";
-                                String grade = gradeObj.has("graderaw") && !gradeObj.get("graderaw").isJsonNull()
-                                        ? gradeObj.get("graderaw").getAsString() : "No Grade";
+                        for (JsonElement gradeElement : gradesArray) {
+                            JsonObject gradeObj = gradeElement.getAsJsonObject();
+                            int itemId = gradeObj.has("id") && !gradeObj.get("id").isJsonNull() ? gradeObj.get("id").getAsInt() : -1;
 
-                                // Create a new GradeItem object
-                                GradeItem gradeItem = new GradeItem(itemId, itemName, grade);
-                                gradeItems.add(gradeItem);
+                            // Replace "Unnamed" with "Total"
+                            String itemName = gradeObj.has("itemname") && !gradeObj.get("itemname").isJsonNull()
+                                    ? gradeObj.get("itemname").getAsString()
+                                    : "Unnamed";
+                            if ("Unnamed".equals(itemName)) {
+                                itemName = "Total";
                             }
-                        } else {
-                            System.out.println("No grades found in 'gradeitems' for user ID: " + userId);
+
+                            String grade = gradeObj.has("graderaw") && !gradeObj.get("graderaw").isJsonNull()
+                                    ? gradeObj.get("graderaw").getAsString()
+                                    : "No Grade";
+
+                            gradeItems.add(new GradeItem(itemId, itemName, grade));
                         }
-                    } else {
-                        System.out.println("No 'gradeitems' found for user ID: " + userId);
                     }
                 }
-            } else {
-                System.out.println("No 'usergrades' found in response for user ID: " + userId);
             }
-        } else {
-            System.out.println("Failed to fetch grades for user ID " + userId + ". Response: " + response.body());
         }
-
         return gradeItems;
     }
 
 
-    // Helper method to log errors
-    private void parseAndLogError(String jsonResponse) {
-        JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
-        String error = jsonObject.has("error") ? jsonObject.get("error").getAsString() : "Unknown error";
-        System.out.println("Error: " + error);
-    }
 }

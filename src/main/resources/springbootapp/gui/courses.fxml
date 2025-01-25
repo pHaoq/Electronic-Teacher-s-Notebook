@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.CoursesController">
-    <top>
-        <Label text="Courses" style="-fx-font-size: 24px; -fx-font-weight: bold;" BorderPane.alignment="CENTER"/>
-    </top>
-    <center>
-        <VBox spacing="10" alignment="CENTER">
-            <children>
-                <ListView fx:id="coursesListView" prefHeight="400" prefWidth="300"/>
-            </children>
-        </VBox>
-    </center>
-    <padding>
-        <Insets top="20" bottom="20" left="20" right="20"/>
-    </padding>
-</BorderPane>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="springbootapp.gui.CoursesController"
+      spacing="10" style="-fx-background-color: white; -fx-padding: 20; -fx-pref-width: 800; -fx-pref-height: 600;">
+    <TableView fx:id="coursesTable" prefHeight="500" prefWidth="780"
+               style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;">
+        <columns>
+            <TableColumn fx:id="courseIdColumn" text="Course ID" prefWidth="200"/>
+            <TableColumn fx:id="courseNameColumn" text="Name" prefWidth="580"/>
+        </columns>
+    </TableView>
+    <Button text="Logout" onAction="#handleLogoutButton"
+            style="-fx-background-color: #00509E; -fx-text-fill: white; -fx-font-weight: bold;"/>
+</VBox>

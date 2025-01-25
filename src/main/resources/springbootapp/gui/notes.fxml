@@ -3,26 +3,37 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.NotesController">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="springbootapp.gui.NotesController"
+            style="-fx-background-color: white; -fx-pref-width: 800; -fx-pref-height: 600;">
     <top>
-        <Label text="Student Notes" style="-fx-font-size: 24px; -fx-font-weight: bold;" BorderPane.alignment="CENTER"/>
+        <Label text="Student Notes" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #00509E;"
+               BorderPane.alignment="CENTER"/>
     </top>
     <center>
-        <VBox spacing="10" alignment="CENTER">
-            <children>
-                <TextArea fx:id="notesDisplayArea" editable="false" prefHeight="300" wrapText="true" promptText="Notes will display here..."/>
-
-                <HBox spacing="10" alignment="CENTER">
-                    <children>
-                        <TextField fx:id="noteTextField" promptText="Enter note text" prefWidth="200"/>
-                        <TextField fx:id="noteColorField" promptText="Note color" prefWidth="100"/>
-                        <Button fx:id="addNoteButton" text="Add Note" onAction="#handleAddNote"/>
-                    </children>
-                </HBox>
-            </children>
+        <VBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+            <TableView fx:id="notesTable" prefHeight="400" prefWidth="780"
+                       style="-fx-background-color: white; -fx-border-color: #80CC28; -fx-border-width: 2;">
+                <columns>
+                    <TableColumn fx:id="textColumn" text="Note Text" prefWidth="350"/>
+                    <TableColumn fx:id="colorColumn" text="Note Type" prefWidth="150"/>
+                    <TableColumn fx:id="dateColumn" text="Date" prefWidth="200"/>
+                    <TableColumn fx:id="actionColumn" text="Actions" prefWidth="80"/>
+                </columns>
+            </TableView>
         </VBox>
     </center>
-    <padding>
-        <Insets top="20" bottom="20" left="20" right="20"/>
-    </padding>
+    <bottom>
+        <HBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+            <children>
+                <TextField fx:id="noteTextField" promptText="Enter note text" prefWidth="250"
+                           style="-fx-background-color: #E8F5E9;"/>
+                <ComboBox fx:id="noteColorComboBox" promptText="Select note type" prefWidth="250"
+                          style="-fx-background-color: #E8F5E9;"/>
+                <Button fx:id="addNoteButton" text="Add Note" onAction="#handleAddNote"
+                        style="-fx-background-color: #80CC28; -fx-text-fill: white;"/>
+                <Button fx:id="backButton" text="Back" onAction="#handleBackButton"
+                        style="-fx-background-color: #00509E; -fx-text-fill: white;"/>
+            </children>
+        </HBox>
+    </bottom>
 </BorderPane>

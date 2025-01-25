@@ -2,12 +2,7 @@ package springbootapp.utils;
 
 import springbootapp.model.Note;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +10,6 @@ public class DatabaseManager {
     private static final String DATABASE_URL = "jdbc:sqlite:src/main/resources/database/notes.db";
     private static Connection conn = null;
 
-    // Initialize and store a single connection instance
     public static void connect() {
         try {
             if (conn == null || conn.isClosed()) {
@@ -27,7 +21,6 @@ public class DatabaseManager {
         }
     }
 
-    // Method to close the connection when done
     public static void closeConnection() {
         try {
             if (conn != null && !conn.isClosed()) {
@@ -40,6 +33,7 @@ public class DatabaseManager {
     }
 
     public static void createNewTable() {
+        connect();
         String sql = """
                      CREATE TABLE IF NOT EXISTS notes (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,20 +41,21 @@ public class DatabaseManager {
                         course_id INTEGER NOT NULL,
                         note_text TEXT NOT NULL,
                         note_colour TEXT NOT NULL,
-                        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        date TEXT DEFAULT CURRENT_TIMESTAMP
                      );
                      """;
 
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("Table 'notes' has been created with the new schema.");
+            System.out.println("Table 'notes' has been created.");
         } catch (SQLException e) {
             System.out.println("Error creating table: " + e.getMessage());
         }
     }
 
     public static void insertNote(int studentId, int courseId, String noteText, String noteColour) {
-        String sql = "INSERT INTO notes(student_id, course_id, note_text, note_colour) VALUES(?, ?, ?, ?)";
+        connect();
+        String sql = "INSERT INTO notes(student_id, course_id, note_text, note_colour, date) VALUES(?, ?, ?, ?, datetime('now'))";
 
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, studentId);
@@ -68,13 +63,26 @@ public class DatabaseManager {
             pstmt.setString(3, noteText);
             pstmt.setString(4, noteColour);
             pstmt.executeUpdate();
-            System.out.println("A new note has been inserted.");
         } catch (SQLException e) {
             System.out.println("Error inserting note: " + e.getMessage());
         }
     }
 
+    public static void updateNoteText(int noteId, String newText, String newDate) {
+        connect();
+        String sql = "UPDATE notes SET note_text = ?, date = ? WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newText);
+            pstmt.setString(2, newDate);
+            pstmt.setInt(3, noteId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error updating note: " + e.getMessage());
+        }
+    }
+
     public static List<Note> selectNotesByStudentAndCourse(int studentId, int courseId) {
+        connect();
         String sql = "SELECT id, student_id, course_id, note_text, note_colour, date FROM notes WHERE student_id = ? AND course_id = ?";
         List<Note> notes = new ArrayList<>();
 
@@ -87,7 +95,8 @@ public class DatabaseManager {
                 int id = rs.getInt("id");
                 String text = rs.getString("note_text");
                 String colour = rs.getString("note_colour");
-                Note note = new Note(id, studentId, courseId, text, colour);
+                String date = rs.getString("date");
+                Note note = new Note(id, studentId, courseId, text, colour, date);
                 notes.add(note);
             }
         } catch (SQLException e) {
@@ -95,5 +104,16 @@ public class DatabaseManager {
         }
 
         return notes;
+    }
+
+    public static void deleteNoteById(int noteId) {
+        connect();
+        String sql = "DELETE FROM notes WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, noteId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Error deleting note: " + e.getMessage());
+        }
     }
 }

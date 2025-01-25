@@ -17,7 +17,7 @@ public class MainView extends Application {
     }
 
     public void showLoginView() throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(MainView.class.getResource("login.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("login.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         LoginController controller = fxmlLoader.getController();
         controller.setMainView(this);
@@ -27,7 +27,7 @@ public class MainView extends Application {
     }
 
     public void showCoursesView() throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(MainView.class.getResource("courses.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("courses.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         CoursesController controller = fxmlLoader.getController();
         controller.setMainView(this);
@@ -37,18 +37,18 @@ public class MainView extends Application {
     }
 
     public void showStudentGradesView(int courseId) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(MainView.class.getResource("notes.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("studentsOverview.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         StudentGradesController controller = fxmlLoader.getController();
         controller.setMainView(this);
-        controller.initialize(courseId);
+        controller.setCourseId(courseId);
         stage.setTitle("Student Grades");
         stage.setScene(scene);
         stage.show();
     }
 
     public void showNotesView(int studentId, int courseId) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(MainView.class.getResource("notes.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("notes.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
         NotesController controller = fxmlLoader.getController();
         controller.setMainView(this);

@@ -6,17 +6,19 @@ public class Note {
     private int courseId;
     private String text;
     private String colour;
+    private String date; // Neues Feld für das Datum
 
-    // Constructor
-    public Note(int id, int studentId, int courseId, String text, String colour) {
+    // Neuer Konstruktor mit Datum
+    public Note(int id, int studentId, int courseId, String text, String colour, String date) {
         this.id = id;
         this.studentId = studentId;
         this.courseId = courseId;
         this.text = text;
         this.colour = colour;
+        this.date = date;
     }
 
-    // Getters and Setters
+    // Getter und Setter für alle Felder
     public int getId() {
         return id;
     }
@@ -57,8 +59,16 @@ public class Note {
         this.colour = colour;
     }
 
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
     @Override
     public String toString() {
-        return "Note{id=" + id + ", studentId=" + studentId + ", courseId=" + courseId + ", text='" + text + "', colour='" + colour + "'}";
+        return "Note{id=" + id + ", studentId=" + studentId + ", courseId=" + courseId + ", text='" + text + "', colour='" + colour + "', date='" + date + "'}";
     }
 }
